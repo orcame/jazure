@@ -26,11 +26,13 @@ To use this plugin, you need:
 	var container = ja.container(sas);
 
 Properties:  
+
 Name|Default|Readonly|Description
 ---|---|---|---
 sas|passed in by parameter|true|the sas url of the container
 
 Functions:  
+
 Name|Return|Async|Description
 getBlob|blob|false|accored the passed in blobName and blobType, reurn a blob instance.
 getBlockBlob|blob|false|return a block blob instance.
@@ -42,6 +44,7 @@ listBlobs|null|true|get blob list under the container.
 	var blob = container.getBlob(blobName,blobType)
 
 Properties:  
+
 Name|Default|Readonly|Description
 ---|---|---|---
 name|passed in|true|the long name of the blob.
@@ -50,7 +53,8 @@ type|passed in|true|the blob type(PageBlob/BlockBlob).
 properties|null|false|the properties of the blob.
 metadata|empty object|false|the metadata of the blob.
 
-Functions:  
+Functions: 
+ 
 Name|Return|Async|Description
 upload|null|true|upload the blob to azure storage server.
 remove|null|true|delete the blob from azure storage server.
