@@ -34,6 +34,7 @@ sas|passed in by parameter|true|the sas url of the container
 Functions:  
 
 Name|Return|Async|Description
+---|---|---|---
 getBlob|blob|false|accored the passed in blobName and blobType, reurn a blob instance.
 getBlockBlob|blob|false|return a block blob instance.
 getPageBlob|blob|false|return a page blob instance.
@@ -53,9 +54,10 @@ type|passed in|true|the blob type(PageBlob/BlockBlob).
 properties|null|false|the properties of the blob.
 metadata|empty object|false|the metadata of the blob.
 
-Functions: 
- 
+Functions:  
+
 Name|Return|Async|Description
+---|---|---|---
 upload|null|true|upload the blob to azure storage server.
 remove|null|true|delete the blob from azure storage server.
 download|null|false|down the blob to local machine.
