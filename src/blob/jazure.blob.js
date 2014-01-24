@@ -7,7 +7,7 @@
     };
 
     container.prototype.init = function (sas) {
-        this.sas = ja.defineReadonlyProperties({ sas: sas });
+        ja.defineReadonlyProperties(this, { sas: sas });
         return this;
     };
     container.prototype.init.prototype = container.prototype;
