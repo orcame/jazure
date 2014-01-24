@@ -1,0 +1,64 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title>Blob Test</title>
+    <script type="text/javascript" src="../lib/jquery-2.0.3.min.js"></script>
+    <script type="text/javascript" src="../lib/jquery.xml2json.js"></script>
+    <script type="text/javascript" src="../src/core/jazure.core.js"></script>
+    <script type="text/javascript" src="../src/blob/jazure.blob.js"></script>
+    <script type="text/javascript">
+        var sas = 'https://neeostorage.blob.core.chinacloudapi.cn/read-write?sv=2013-08-15&sr=c&sig=zK57pIE56aCap0TSD%2BecBxs4QAsVDJFIM4LFvFqxuAs%3D&st=2014-01-24T01%3A44%3A06Z&se=2016-05-06T09%3A44%3A06Z&sp=rwdl';
+        var container = ja.container(sas);
+
+        $(function () {
+            container.listBlobs(function (blobs) {
+                var list = $('#list');
+                window.blobs = blobs;
+                $.each(blobs, function () {
+                    var div = $('<div/>');
+                    div.text(this.name);
+                    list.append(div);
+                })
+            }, function (err) { console.log(err); });
+            var blob = container.getBlob('cloudxplorer.zip');
+            blob.getProperties();
+            blob.setMetadata({ 'neeo': 'meng' });
+            blob.getMetadata();
+            window.blob = blob;
+            var p = $('#percent');
+            $('#btnUpload').click(function () {
+                var fileControl = $('#testFile');
+                if (fileControl.get(0).files.length == 0) {
+                    alert('Please select file.');
+                    return;
+                }
+                var file = fileControl.get(0).files[0];
+                var blob = container.getBlob(file.name);
+                var t = new Date();
+                blob.upload(file, function () {
+                    t = new Date();
+                    console.log('before-upload' + this.name);
+                }, function (ev) {
+                    p.text(ev.loaded/ev.total);
+                }, function () {
+                    var stamp = new Date() - t;
+                    console.log('speed', file.size, file.size / 1024 / stamp * 1000);
+                }, function (err) {
+                    console.log('error', err);
+                });
+            });
+        });
+    </script>
+    <style type="text/css">
+        #percent {
+            color: #333;
+            font-size: 30px;
+        }
+    </style>
+</head>
+<body>
+    <input type="file" id="testFile" /><input id="btnUpload" type="button" value="upload" />
+    <div id="percent"></div>
+    <div id="list"></div>
+</body>
+</html>
