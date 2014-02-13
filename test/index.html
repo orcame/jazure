@@ -4,22 +4,47 @@
     <title>Blob Test</title>
     <script type="text/javascript" src="../lib/jquery-2.0.3.min.js"></script>
     <script type="text/javascript" src="../lib/jquery.xml2json.js"></script>
+    <script type="text/javascript" src="../lib/crypto-min.js"></script>
     <script type="text/javascript" src="../src/core/jazure.core.js"></script>
-    <script type="text/javascript" src="../src/blob/jazure.blob.js"></script>
+    <script type="text/javascript" src="../src/jazure.storage/jazure.storage.core.js"></script>
+    <script type="text/javascript" src="../src/jazure.storage/jazure.storage.account.js"></script>
+    <script type="text/javascript" src="../src/jazure.storage/blob/jazure.storage.container.js"></script>
+    <script type="text/javascript" src="../src/jazure.storage/blob/jazure.storage.blob.js"></script>
     <script type="text/javascript">
         var sas = 'https://neeostorage.blob.core.chinacloudapi.cn/read-write?sv=2013-08-15&sr=c&sig=zK57pIE56aCap0TSD%2BecBxs4QAsVDJFIM4LFvFqxuAs%3D&st=2014-01-24T01%3A44%3A06Z&se=2016-05-06T09%3A44%3A06Z&sp=rwdl';
-        var container = ja.container(sas);
+        var accountName = 'neeostorage', sharedKey = 'byJtu9UFb3siM7KJneXw86XelJfYsDfp/3nmLAB+SJK7uxGy5N8qecbd0/UWzdRjCHYsBxQB1y3J9iFhN4lxYQ==';
+        var endpoint = 'core.chinacloudapi.cn';
+        //accountName = 'amberstorage';
+        //sharedKey = 'Ht8U3FiVUoBPtfL0Kc4ZbDcIq+VbUHvSBxj7aa02H0R+JopevHmxi/zZGF7wojhsAdfz0bft4KjunsjbRcoCjw==';
 
+        var account = ja.storage.account(accountName, sharedKey, endpoint);
+        window.account = account;
+        var container = ja.storage.container(sas);
         $(function () {
+            account.listContainers({ timeout: 90 }, function (containers) {
+                var list = $('#list');
+                window.containers = containers;
+                $.each(containers, function () {
+                    var div = $('<div/>');
+                    div.text(this.Name);
+                    list.append(div);
+                })
+            }, function (err) {
+                console.log(err);
+            });
+            container = account.getContainer('read-write');
+            account.getBlobServiceProperties(function (props) {
+                window.props = props;
+            });
             container.listBlobs(function (blobs) {
                 var list = $('#list');
                 window.blobs = blobs;
                 $.each(blobs, function () {
                     var div = $('<div/>');
-                    div.text(this.name);
+                    div.text(this.Name);
                     list.append(div);
                 })
-            }, function (err) { console.log(err); });
+            }, function (desc, err) { console.log(err); });
             var blob = container.getBlob('cloudxplorer.zip');
             blob.getProperties();
             blob.setMetadata({ 'neeo': 'meng' });
@@ -39,7 +64,7 @@
                     t = new Date();
                     console.log('before-upload' + this.name);
                 }, function (ev) {
-                    p.text(ev.loaded/ev.total);
+                    p.text(ev.loaded / ev.total);
                 }, function () {
                     var stamp = new Date() - t;
                     console.log('speed', file.size, file.size / 1024 / stamp * 1000);

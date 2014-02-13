@@ -3,8 +3,6 @@
         return new jAzure.fn.init();
     };
 
-    var maxBlockSize = 4096 * 1024;
-
     jAzure.prototype = {
         init: function () {
             return this;
@@ -12,22 +10,10 @@
     };
     $.extend(jAzure, {
         maxThread: 7,
-        blockSize: maxBlockSize,
+        protocol: 'https',
         ajax: function (options) {
-            var url = options.url;
-            if (options.params) {
-                var p = [];
-                for (var n in options.params) {
-                    p.push(n + '=' + options.params[n]);
-                }
-                if (url.indexOf('?') > 0) {
-                    url += '&' + p.join('&');
-                } else {
-                    url += p.join('&');
-                }
-            }
             $.ajax({
-                url: url,
+                url: options.url,
                 type: options.type,
                 data: options.data,
                 dataType: options.dataType,
@@ -42,21 +28,37 @@
                     return _xhr;
                 },
                 beforeSend: function (xhr) {
+                    if (options.headers) {
+                        for (var n in options.headers) {
+                            xhr.setRequestHeader(n, options.headers[n]);
+                        }
+                    }
                     if (options.before) {
                         options.before(xhr);
                     }
                 },
                 success: function (data, sta, xhr) {
+                    if ($.isXMLDoc(data)) {
+                        data = $.xml2json(data);
+                    }
                     if (options.convertor) {
                         data = options.convertor(data);
                     }
                     if (options.success) {
-                        options.success(data, sta, xhr);
+                        if (options.object) {
+                            options.success.call(options.object, data, sta, xhr);
+                        } else {
+                            options.success(data, sta, xhr);
+                        }
                     }
                 },
                 error: function (xhr, desc, err) {
                     if (options.error) {
-                        options.error(err);
+                        if (options.object) {
+                            options.error.call(options.object, desc, err);
+                        } else {
+                            options.error(desc, err);
+                        }
                     }
                 }
             });
@@ -104,21 +106,7 @@
     jAzure.prototype.init.prototype = jAzure.prototype;
     jAzure.fn = jAzure.prototype;
 
-    var account = function (connectionString) {
-        return new account.fn.init(connectionString);
-    };
-    account.prototye = {
-        init: function (connectionString) {
-            this.connectionString = connectionString;
-            return this;
-        },
-        connectionString: ''
-    };
-
-    account.prototye.init.prototype = account.prototye;
-    account.fn = account.prototye;
-    jAzure.fn.account = account;
-
+    
     global.jAzure = jAzure;
     if (!global.ja) {
         global.ja = jAzure;
