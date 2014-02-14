@@ -47,8 +47,9 @@
             }, function (desc, err) { console.log(err); });
             var blob = container.getBlob('cloudxplorer.zip');
             blob.getProperties();
-            blob.setMetadata({ 'neeo': 'meng' });
-            blob.getMetadata();
+            blob.setMetadata({ 'neeo': 'meng' }, function () {
+                blob.getMetadata();
+            });
             window.blob = blob;
             var p = $('#percent');
             $('#btnUpload').click(function () {

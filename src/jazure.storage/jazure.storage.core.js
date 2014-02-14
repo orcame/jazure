@@ -1,8 +1,6 @@
 ﻿(function (jAzure, $, global) {
     var ja = jAzure
         , maxBlockSize = 4096 * 1024;
-
-
     //storage
     var storage = {
         newLineChar: '\n',
@@ -11,34 +9,15 @@
         serviceEndpoint: 'core.windows.net'
     };
 
-    var sendRequest = function (object, verb, url, options, success, error) {
-        if (typeof (options) == 'function') {
-            success = options;
-            error = success;
-        }
-        var request = {
-            url: url,
-            object: object,
-            type: verb
-        };
-        if (success) {
-            request.success = success;
-        }
-        if (error) {
-            request.error = error;
-        }
-        if (options) {
-            request = $.extend({}, options, request);
-        }
-        storage.sendRequest(request);
-    }
     jAzure.storage = storage;
 
+    //get absolute path from url
     function getAbsolutePath(uri) {
         var reg = new RegExp('http[s]?://[^/]*/([^?]*)');
         var match = reg.exec(uri);
         return match && match[1].length > 0 ? match[1] : '/';
-    };
+    }
+    //get the query strings on url
     function getQueryStrings(uri) {
         var reg = new RegExp('([^&?=]+)=([^=&]*)', 'g'), qs = [];
         var match = reg.exec(uri);
@@ -101,7 +80,8 @@
             }
         }
         return resources.join('');
-    } function getSharedKeyAuthHeader(request, accountName, sharedKey) {
+    }
+    function getSharedKeyAuthHeader(request, accountName, sharedKey) {
         var hs = request.isSharedKeyLiteOrTableService ?
              ['Content-MD5', 'Content-Type', 'Date'] :
              ['Content-Encoding', 'Content-Language', 'Content-Length', 'Content-MD5', 'Content-Type', 'Date', 'If-Modified-Since', 'If-Match', 'If-None-Match', 'If-Unmodified-Since', 'Range'];
@@ -127,16 +107,40 @@
         } else {
             return 'SharedKey ' + str;
         }
-    } function canonicalizeRequest(request, auth) {
-        var obj = request.object;
+    }
+    var rnoContent = /^(?:GET|HEAD)$/, rquery = /\?/;
+    function cacheUrl(request) {
+        var hasContent = !rnoContent.test(request.type), cacheURL = request.url;
+        if (!hasContent && request.data) {
+            cacheURL += (rquery.test(cacheURL) ? "&" : "?") + request.data;
+        }
+        return cacheURL;
+    }
+    function canonicalizeRequestHeaders(request) {
         request.headers = request.headers || {};
+        var curl = cacheUrl(request);
+        console.log('cacheurl', curl);
+        if (request.ifModified) {
+            if ($.lastModified[curl]) {
+                request.headers["If-Modified-Since"] = $.lastModified[curl];
+            }
+            if ($.etag[curl]) {
+                request.headers['If-None-Match'] = $.etag[curl];
+            }
+        }
         request.headers['x-ms-version'] = storage.x_ms_version;
         request.headers['x-ms-date'] = new Date().toGMTString();
-
+        if (request.headers['Content-Type']) {
+            request.contentType = request.headers['Content-Type'];
+        }
+    }
+    function canonicalizeRequest(request, auth) {
+        canonicalizeRequestHeaders(request);
         if (auth) {
             request.headers['Authorization'] = getSharedKeyAuthHeader(request, auth.accountName, auth.sharedKey);
         }
-    } function preSetUrl(request) {
+    }
+    function preSetUrl(request) {
         var url = request.url;
         if (request.params) {
             var p = [];
@@ -164,14 +168,16 @@
             this.sendRequest = function (request) {
                 request.url = request.url;
                 preSetUrl(request);
+                request.ifModified = true;
                 canonicalizeRequest(request, _auth);
                 ja.ajax(request);
             }
         }, request: function (url, verb, params, options) {
             return new request(this, url, verb, params, options);
         }
-    }
+    };
     web.prototype.init.prototype = web.prototype;
+
     function request(web, url, verb, params, options) {
         if (options) {
             $.extend(this, options);
@@ -191,6 +197,6 @@
             }
             this.web.sendRequest(this);
         }
-    }
+    };
     jAzure.storage.web = web;
 })(jAzure, jQuery, window);

@@ -102,6 +102,99 @@
             this.web = web();
             return this;
         },
+        put: function (file, success, error) {
+            this.upload(file, null, null, success, error);
+        },
+        get: function (success, error) {
+
+        },
+        snapshot: function (metadata, success, error) {
+            if (typeof (metadata) == 'function') {
+                error = success;
+                success = metadata;
+                metadata = null;
+            }
+            var headers = {};
+            if (metadata) {
+                for (n in metadata) {
+                    headers['x-ms-meta-' + n] = metadata[n];
+                }
+            }
+            this.web.request(this.Url, 'PUT', { comp: 'snapshot' },
+                {
+                    headers: headers,
+                    success: success,
+                    error: error
+                }).send();
+        },
+        copy: function (sourceBlob, options, success, error) {
+            if (typeof (options) == success) {
+                error = success;
+                success = options,
+                options = null;
+            }
+            var headers = { 'x-ms-copy-source': sourceBlob };
+            if (options) {
+                for (n in options) {
+                    if (n == 'metadata') {
+                        var metadata = options[n];
+                        for (m in metadata) {
+                            headers['x-ms-meta-' + m] = metadata[m];
+                        }
+                    }
+                    else {
+                        headers[n] = options[n];
+                    }
+                }
+            }
+            var t = this;
+            t.web.request(this.Url, 'PUT', null,
+                {
+                    headers: headers,
+                    success: function (data, sta, xhr) {
+                        return {
+                            copyId: xhr.getResponseHeader('x-ms-copy-id'),
+                            copyStatus: xhr.getResponseHeader('x-ms-copy-status')
+                        };
+                    },
+                    error: error
+                }).send();
+        },
+        abortCopy: function (copyId, success, error) {
+            var headers = { 'x-ms-copy-action': 'abort' };
+            this.web.request(this.Url, 'PUT', { comp: 'copy', copyid: copyId }, {
+                headers: headers,
+                success: success,
+                error: error
+            }).send();
+        },
+        getBlockList: function (blockListType, snapshot, success, error) {
+            if (typeof (blockListType) == 'function') {
+                success = blockListType;
+                error = snapshot;
+                blockListType = 'committed';
+                snapshot = null;
+            }
+            else if (typeof (snapshot) == 'function') {
+                error = success;
+                success = snapshot;
+                snapshot = 0;
+            }
+            if (this.BlobType != blockBlobType) {
+                throw 'The function only available for block blob';
+            }
+            if (['committed', 'uncommitted', 'all'].indexOf(blockListType) == -1) {
+                throw 'The block list type can only be "committed","uncommitted" or "all".';
+            }
+            var params = { 'comp': 'blocklist', 'blocklisttype': blockListType };
+            if (snapshot) {
+                params['snapshot'] = snapshot;
+            }
+            this.web.request(this.Url, 'GET', params).send(success, error);
+        },
+        getPageRanges: function () {
+            //todo:get page range...
+        },
         upload: function (file, before, progress, success, error) {
             if (!progress) {
                 progress = before;
@@ -129,7 +222,6 @@
             this.web.request(this.Url, 'DELETE').send(success, error);
         }, setMetadata: function (metadata, success, error) {
             if (metadata) {
-                var t = this;
                 var headers = {};
                 for (n in metadata) {
                     headers[metaPrefix + n] = metadata[n];
@@ -142,18 +234,21 @@
             }
         }, setProperties: function (properties, success, error) {
             if (properties) {
+                var headers = {};
+                for (n in properties) {
+                    headers[propertiesMap[n]] = properties[n];
+                }
                 this.web.request(this.Url, 'PUT', { comp: 'properties' }, {
-                    before: function (xhr) {
-                        for (n in propertiesMap) {
-                            xhr.setRequestHeader(propertiesMap[n], properties[n]);
-                        }
-                    }, success: success
-                    , error: error
+                    headers: headers,
+                    success: success,
+                    error: error
                 }).send();
             }
         }, getMetadata: function (success, error) {
             var t = this;
             t.web.request(this.Url, 'GET', { comp: 'metadata' }, {
+                before: function (xhr) {
+                },
                 success: function (data, sta, xhr) {
                     t.Metadata = ja.getResponseHeaders(xhr, metaPrefix);
                     if (success) {
@@ -207,8 +302,8 @@
                         , {
                             data: data,
                             processData: false,
+                            headers: { 'x-ms-blob-type': cp.blob.BlobType, 'Content-Type': cp.type },
                             before: function (xhr) {
-                                xhr.setRequestHeader('x-ms-blob-type', cp.blob.type);
                                 if (!cp.send) {
                                     if (cp.before) {
                                         cp.before.apply(cp.blob, arguments);
@@ -321,9 +416,8 @@
             data.push('</BlockList>');
             web.request(uri, 'PUT', { comp: 'blocklist' }, {
                 data: data.join(''),
-                before: function (xhr) {
-                    xhr.setRequestHeader('x-ms-blob-content-type', cp.type);
-                }, success: function () {
+                headers: { 'Content-Type': ', text/plain;charset=UTF-8' },
+                success: function () {
                     if (cp.success) {
                         uploader.dequeueBlob(cp.blob);//remove the blob from the queue
                         cp.success.apply(cp.blob, arguments);

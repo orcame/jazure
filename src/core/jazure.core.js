@@ -8,6 +8,7 @@
             return this;
         }
     };
+    
     $.extend(jAzure, {
         maxThread: 7,
         protocol: 'https',
@@ -17,6 +18,9 @@
                 type: options.type,
                 data: options.data,
                 dataType: options.dataType,
+                ifModified: true,
+                headers: options.headers,
+                cache: true,
                 processData: false,
                 xhr: function () {
                     var _xhr = $.ajaxSettings.xhr();
@@ -28,11 +32,12 @@
                     return _xhr;
                 },
                 beforeSend: function (xhr) {
-                    if (options.headers) {
-                        for (var n in options.headers) {
-                            xhr.setRequestHeader(n, options.headers[n]);
-                        }
-                    }
+                    //if (options.headers) {
+                    //    for (var n in options.headers) {
+                    //        xhr.setRequestHeader(n, options.headers[n]);
+                    //    }
+                    //}
+                    console.log('lastModified', $.lastModified);
                     if (options.before) {
                         options.before(xhr);
                     }
@@ -106,7 +111,7 @@
     jAzure.prototype.init.prototype = jAzure.prototype;
     jAzure.fn = jAzure.prototype;
 
-    
+
     global.jAzure = jAzure;
     if (!global.ja) {
         global.ja = jAzure;

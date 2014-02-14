@@ -75,14 +75,12 @@
                         success.call(t, t.Properties);
                     }
                 }, error);
-        }, setProperties: function (properties, success, error) {
-
         }, getMetadata: function (success, error) {
             var t = this;
             t.web.request(this.Url, 'GET', { restype: 'container', comp: 'metadata' },
                 {
                     success: function (data, sta, xhr) {
-                        t.Metadata = ja.getResponseHeaders(xhr, metaPrefix);
+                        t.Metadata = xhr.getResponseHeaders(metaPrefix);
                         if (success) {
                             success.call(t, t.Metadata);
                         }
@@ -104,13 +102,13 @@
             }
         }, getACL: function (success, error) {
             var t = this;
-            t.web.reqeust(this.Url, 'GET',
+            t.web.request(this.Url, 'GET',
                 { restype: 'container', comp: 'acl' },
                 {
                     success: function (data, sta, xhr) {
                         var acl = {};
-                        acl.PublicAccess = ja.getResponseHeader(xhr, 'x-ms-blob-public-access');
-                        acl.SharedAccessPolicies = data;
+                        acl.PublicAccess = xhr.getResponseHeader('x-ms-blob-public-access');
+                        acl.SignedIdentifiers = data;
                         t.ACL = acl;
                         if (success) {
                             success.call(t, t.ACL);
@@ -119,23 +117,22 @@
                 }).send();
         }, setACL: function (acl, success, error) {
             if (acl) {
-                var t = this;
-                storage.put(this.Url,
+                var headers = { 'Content-Type': ', text/plain;charset=UTF-8' };
+                if (acl.PublicAccess) {
+                    headers['x-ms-blob-public-access'] = acl.PublicAccess;
+                }
+                this.web.request(this.Url,
                     'PUT',
                     { restype: 'container', comp: 'acl' },
                     {
-                        before: function (xhr) {
-                            if (acl.PublicAccess) {
-                                xhr.setRequestHeader('x-ms-blob-public-access', acl.PublicAccess);
-                            }
-                        },
-                        data: $.json2xml(acl.SharedAccessPolicies),
+                        headers: headers,
+                        data: $.json2xml({ SignedIdentifiers: acl.SignedIdentifiers }),
                         success: success,
                         error: error
                     }).send();
             }
         }, lease: function (success, error) {
-
+            alert('lease is comming...');
         }
     }
     container.prototype.init.prototype = container.prototype;
