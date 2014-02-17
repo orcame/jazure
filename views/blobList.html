@@ -1,0 +1,25 @@
+﻿<table id='content-list' class="table table-striped table-hover">
+    <thead>
+        <tr>
+            <th style="width:70%">Name</th>
+            <th style="width:10%">Size</th>
+            <th style="width:20%">Modified</th>
+        </tr>
+    </thead>
+    <tbody>
+        <!--var len=blobs.length;-->
+        <!--for(var idx=0;idx<len;idx++){-->
+        <tr>
+            <!--var item=blobs[idx];-->
+            <td>
+                <span class="jeitem">
+                    <span class="jeitem-icon jeitem-icon-<!--extension(item.Name)-->"></span>
+                    <a href="<!--item.Url-->"><!--item.Name--></a>
+                </span>
+            </td>
+            <td><!--sizePasser(item.Properties.Content_Length)--></td>
+            <td><!--datePasser(item.Properties.Last_Modified)--></td>
+        </tr>
+        <!--}-->
+    </tbody>
+</table>
