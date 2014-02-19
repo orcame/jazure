@@ -200,3 +200,4 @@
     };
     jAzure.storage.web = web;
 })(jAzure, jQuery, window);
+
