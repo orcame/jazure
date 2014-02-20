@@ -1,0 +1,101 @@
+﻿<div class="row">
+    <div class="col-lg-12">
+        <h1>All Items <small><%je.container.Name%></small></h1>
+        <ol class="breadcrumb">
+            <li class="active" id="showAll"><i class="fa fa-dashboard"></i> All Items</li>
+        </ol>
+    </div>
+</div><!-- /.row -->
+<%var docCount=je.pickDocuments(blobs).length;%>
+<%var picCount=je.pickPictures(blobs).length;%>
+<%var videoCount=je.pickVideos(blobs).length;%>
+<%var otherCount=blobs.length-docCount-picCount-videoCount;%>
+<div class="row">
+    <div class="col-lg-3">
+        <div class="panel panel-info">
+            <div class="panel-heading je-catalog" data-catalog="document">
+                <div class="row">
+                    <div class="col-xs-6">
+                        <i class="fa fa-th-list fa-5x"></i>
+                    </div>
+                    <div class="col-xs-6 text-right">
+                        <p class="announcement-heading"><%docCount%></p>
+                        <p class="announcement-text">Documents</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3">
+        <div class="panel panel-warning  je-catalog" data-catalog="picture">
+            <div class="panel-heading">
+                <div class="row">
+                    <div class="col-xs-6">
+                        <i class="fa fa-picture-o fa-5x"></i>
+                    </div>
+                    <div class="col-xs-6 text-right">
+                        <p class="announcement-heading"><%picCount%></p>
+                        <p class="announcement-text">Pictures</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3">
+        <div class="panel panel-danger je-catalog" data-catalog="video">
+            <div class="panel-heading">
+                <div class="row">
+                    <div class="col-xs-6">
+                        <i class="fa fa-video-camera fa-5x"></i>
+                    </div>
+                    <div class="col-xs-6 text-right">
+                        <p class="announcement-heading"><%videoCount%></p>
+                        <p class="announcement-text">Videos</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3">
+        <div class="panel panel-success je-catalog" data-catalog="other">
+            <div class="panel-heading">
+                <div class="row">
+                    <div class="col-xs-6">
+                        <i class="fa fa-list fa-5x"></i>
+                    </div>
+                    <div class="col-xs-6 text-right">
+                        <p class="announcement-heading"><%otherCount%></p>
+                        <p class="announcement-text">Others</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div><!-- /.row -->
+
+<div class="row">
+    <div class="col-lg-12">
+        <div class="panel panel-primary">
+            <div class="panel-heading">
+                <h3 class="panel-title"><i class="fa fa-bar-chart-o"></i> All Items: October 1, 2013 - October 31, 2013</h3>
+            </div>
+            <div class="panel-body">
+                <table class="table je-list">
+                    <tbody>
+                        <%for(var idx=0;idx < blobs.length; idx++){%>
+                        <tr>
+                            <td style="width:60%">
+                                <span class="je-icon je-icon-<%extension(blobs[idx].Name)%>"></span>
+                                <a href="javascript:"><%blobs[idx].Name%></a>
+                            </td>
+                            <td style="width:10%"><%je.readableSize(blobs[idx].Properties.Content_Length)%></td>
+                            <td style="width:10%"><%je.readableDate(blobs[idx].Properties.Last_Modified)%></td>
+                        </tr>
+                        <%}%>
+                    </tbody>
+                </table>
+                <div id="morris-chart-area"></div>
+            </div>
+        </div>
+    </div>
+</div>

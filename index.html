@@ -1,91 +1,109 @@
 ﻿<!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html lang="en">
 <head>
-    <meta charset="utf-8" />
+    <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JAzure Demo</title>
-    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <meta name="description" content="">
+    <meta name="author" content="orcame">
+    <title>JAzure - All Items</title>
+    <!-- Bootstrap core CSS -->
+    <link href="css/bootstrap.css" rel="stylesheet">
+    <!-- Add custom CSS here -->
+    <link href="css/sb-admin.css" rel="stylesheet">
     <link href="css/site.css" rel="stylesheet">
-    <script src="lib/jquery-2.0.3.min.js"></script>
-    <script src="lib/bootstrap.min.js"></script>
-    <script type="text/javascript" src="lib/jquery.xml2json.js"></script>
-    <script type="text/javascript" src="lib/crypto-min.js"></script>
-    <script type="text/javascript" src="src/core/jazure.core.js"></script>
-    <script type="text/javascript" src="src/jazure.storage/jazure.storage.core.js"></script>
-    <script type="text/javascript" src="src/jazure.storage/jazure.storage.account.js"></script>
-    <script type="text/javascript" src="src/jazure.storage/blob/jazure.storage.container.js"></script>
-    <script type="text/javascript" src="src/jazure.storage/blob/jazure.storage.blob.js"></script>
-    <script src="js/index.js"></script>
-    <script type="text/javascript">
-    </script>
+    <link rel="stylesheet" href="font-awesome/css/font-awesome.min.css">
+    <!-- Page Specific CSS -->
+    <link rel="stylesheet" href="http://cdn.oesmith.co.uk/morris-0.4.3.min.css">
 </head>
 <body>
-    <header class="navbar navbar-inverse navbar-fixed-top bs-docs-nav" role="banner">
-        <div class="container">
+    <div id="wrapper">
+        <!-- Sidebar -->
+        <nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+            <!-- Brand and toggle get grouped for better mobile display -->
             <div class="navbar-header">
-                <button class="navbar-toggle" type="button" data-toggle="collapse" data-target=".bs-navbar-collapse">
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-ex1-collapse">
                     <span class="sr-only">Toggle navigation</span>
                     <span class="icon-bar"></span>
                     <span class="icon-bar"></span>
                     <span class="icon-bar"></span>
                 </button>
-                <a href="../" class="navbar-brand">jazure</a>
+                <a class="navbar-brand" href="index.html">JAzure</a>
             </div>
-            <nav class="collapse navbar-collapse bs-navbar-collapse" role="navigation">
-                <ul class="nav navbar-nav">
+            <!-- Collect the nav links, forms, and other content for toggling -->
+            <div class="collapse navbar-collapse navbar-ex1-collapse">
+                <ul class="nav navbar-nav side-nav">
                     <li class="active">
-                        <a href="../getting-started">Home</a>
+                        <a href="#allitem">
+                            <i class="fa fa-th"></i> All Items
+                        </a>
                     </li>
-                    <li>
-                        <a href="views/settings.html" data-toggle="modal" data-target="#settingsModal">Settings</a>
+                    <li class="disabled">
+                        <a href="#documents">
+                            <i class="fa fa-th-list"></i> Documents
+                        </a>
+                    </li>
+                    <li class="disabled">
+                        <a href="#pictures">
+                            <i class="fa fa-picture-o"></i> Pictures
+                        </a>
+                    </li>
+                    <li class="disabled">
+                        <a href="#videos">
+                            <i class="fa fa-video-camera"></i> Videos
+                        </a>
+                    </li>
+                    <li class="disabled">
+                        <a href="#others">
+                            <i class="fa fa-list"></i> Others
+                        </a>
                     </li>
                 </ul>
-                <ul class="nav navbar-nav navbar-right">
+                <ul class="nav navbar-nav navbar-right navbar-user">
                     <li>
-                        <a href="../about">About</a>
+                        <a id="addFile">
+                            <i class="fa fa-plus"></i> Add File
+                            <input type="file" />
+                        </a>
+                    </li>
+                    <li class="dropdown messages-dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                            <i class="fa fa-envelope"></i> Messages <span class="badge">0</span>
+                            <b class="caret"></b>
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li class="dropdown-header">Uploading files</li>
+                            <li class="divider"></li>
+                            <li class="message-preview">
+                            </li>
+                            <li class="divider"></li>
+                            <li><a href="#">View Inbox <span class="badge">0</span></a></li>
+                        </ul>
+                    </li>
+                    <li class="dropdown user-dropdown">
+                        <a href="#" class="dropdown-toggle" id="btnSettings" data-toggle="dropdown"><i class="fa fa-cog"></i> Settings </a>
+                    </li>
+                    <li class="dropdown user-dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown"><i class="fa fa-info"></i> About </a>
                     </li>
                 </ul>
-            </nav>
-        </div>
-    </header>
-    <div class="container">
-        <div class="row">
-            <div class="col-md-3">
-                <div class="bs-sidebar hidden-print" role="complementary">
-                    <ul class="nav bs-sidenav">
+            </div><!-- /.navbar-collapse -->
+        </nav>
+        <div id="page-wrapper">
+        </div><!-- /#page-wrapper -->
+        <div id="modal-wrapper"></div>
+    </div><!-- /#wrapper -->
+    <!-- JavaScript -->
 
-                        <li>
-                            <a href="#download">Documents</a>
-                        </li>
-                        <li>
-                            <a href="#whats-included">Pictures</a>
-                        </li>
-                        <li>
-                            <a href="#template">Music</a>
-                        </li>
-                        <li>
-                            <a href="#examples">Videos</a>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-            <div class="col-md-9" role="main">
-                <div class="bs-docs-section" id="content">
-                    <table id='content-list' class="table table-striped table-hover">
-                        <thead><tr><th>Name</th><th>Size</th><th>Modified</th></tr></thead>
-                        <tbody></tbody>
-                    </table>
-                </div>
+    <script src="lib/jquery-2.0.3.min.js"></script>
+    <script src="lib/bootstrap.min.js"></script>
+    <script type="text/javascript" src="lib/jquery.xml2json.js"></script>
+    <script type="text/javascript" src="lib/crypto-min.js"></script>
+    <script type="text/javascript" src="src/jazure.core/jazure.core.js"></script>
+    <script type="text/javascript" src="src/jazure.storage/jazure.storage.core.js"></script>
+    <script type="text/javascript" src="src/jazure.storage/jazure.storage.account.js"></script>
+    <script type="text/javascript" src="src/jazure.storage/blob/jazure.storage.container.js"></script>
+    <script type="text/javascript" src="src/jazure.storage/blob/jazure.storage.blob.js"></script>
+    <script src="js/je.js"></script>
 
-            </div>
-        </div>
-    </div>
-    <footer class="bs-footer" role="contentinfo">
-        <div class="container">
-            <p>Designed and built by <a href="http://github.com/orcame" target="_blank">@orcame</a></p>
-        </div>
-    </footer>
-
-    <div class="modal fade" id="settingsModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true"></div>
 </body>
 </html>

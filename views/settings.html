@@ -1,65 +1,96 @@
-<div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-        <h4 class="modal-title" id="myModalLabel">Settings</h4>
-      </div>
-      <div class="modal-body">
-
-        <div class="alert alert-info">
-          You can specify a <a data-toggle="collapse" data-target="#collapseSAS"><strong>SAS URL</strong></a> or an <strong>Account</strong>.
-        </div>
-        <div class="panel-group" id="settingsAccordion">
-         <div class="panel panel-default">
-            <div class="panel-heading">
-              <h4 class="panel-title">
-                <a data-toggle="collapse" data-parent="#settingsAccordion" href="#collapseSAS">
-                  Shared Access Signiture
-                </a>
-              </h4>
+﻿<div class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title" id="myModalLabel">Settings</h4>
             </div>
-            <div id="collapseSAS" class="panel-collapse collapse">
-              <div class="panel-body">
-                <div class="form-group">
-                  <input type="text"  class="form-control" id="sasUrl" placeholder="Shared Access Signature Url"/>
+            <div class="modal-body">
+                <ul class="nav nav-tabs text-center">
+                    <li class="active">
+                        <a href="#settingAccount" data-toggle="tab">
+                            <div class="panel panel-warning setting-panel">
+                                <div class="panel-heading">
+                                    <div class="row">
+                                        <div class="col-xs-4">
+                                            <i class="fa fa-globe fa-3x"></i>
+                                        </div>
+                                        <div class="col-xs-8 text-right">
+                                            <p class="setting-heading">Account</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#settingSAS" data-toggle="tab">
+                            <div class="panel panel-info setting-panel">
+                                <div class="panel-heading">
+                                    <div class="row">
+                                        <div class="col-xs-4">
+                                            <i class="fa fa-key fa-3x"></i>
+                                        </div>
+                                        <div class="col-xs-8 text-right">
+                                            <p class="setting-heading">SAS</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </a>
+                    </li>
+                </ul>
+                <!-- Tab panes -->
+                <div class="tab-content">
+                    <div class="tab-pane active" id="settingAccount">
+                        <br />
+                        <div role="form">
+                            <div class="form-group">
+                                <label class="control-label">Account Name</label>
+                                <input type="text" class="form-control" id="settingAccountName" value="<%je.accountName%>" placeholder="Your account name">
+                            </div>
+                            <div class="form-group">
+                                <label class="control-label">Access Key</label>
+                                <input type="text" class="form-control" id="settingSharedKey" value="<%je.sharedKey%>" placeholder="Primary(or Secondary) access key">
+                            </div>
+                            <div class="form-group">
+                                <label class="control-label">Container Name</label>
+                                <input type="text" class="form-control" id="settingContainerName" value="<%je.containerName%>" placeholder="Your container name">
+                            </div>
+                            <div class="form-group">
+                                <label class="control-label">Container Name</label>
+                                <select id="settingEndpoint" class="form-control">
+                                    <%if(je.endpoint=='core.chinacloudapi.cn'){%>
+                                    <option selected value="core.chinacloudapi.cn">Azure China(MoonCake)</option>
+                                    <option value="core.windows.net">Azure Global(WorldWide)</option>
+                                    <%}else{%>
+                                    <option value="core.chinacloudapi.cn">Azure China(MoonCake)</option>
+                                    <option selected value="core.windows.net">Azure Global(WorldWide)</option>
+                                    <%}%>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tab-pane" id="settingSAS">
+                        <br />
+                        <div class="alert alert-success alert-dismissable">
+                            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                            A shared access signature is a URI that grants restricted access rights to containers, blobs, queues, and tables for a specific time interval. By providing a client with a shared access signature, you can enable them to access resources in your storage account without sharing your account key with them. Supported operations using shared access signatures include.
+                            <a class="alert-link" href="http://startbootstrap.com">Learn more</a>
+                        </div>
+                        <div role="form">
+                            <div class="form-group">
+                                <label>Shared Access Signature</label>
+                                <input type="text" class="form-control" id="settingSAS" value="<%je.sas%>" placeholder="Your shared access signature url.">
+                            </div>
+                        </div>
+                    </div>
                 </div>
-              </div>
             </div>
-          </div>
-          <div class="panel panel-default">
-            <div class="panel-heading">
-              <h4 class="panel-title">
-                <a data-toggle="collapse" data-parent="#settingsAccordion" href="#collapseAccount">
-                  Account
-                </a>
-              </h4>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" id="btnSettingSave" class="btn btn-primary">Save</button>
             </div>
-            <div id="collapseAccount" class="panel-collapse collapse">
-              <div class="panel-body">
-                <div class="form-group">
-                  <input type="text"  class="form-control" id="account" placeholder="Account Name"/>
-                </div>
-                <div class="form-group">
-                  <input type="text"  class="form-control" id="sharedKey" placeholder="Shared Access Key"/>
-                </div>
-                <div class="form-group">
-                  <input type="text"  class="form-control" id="containerName" placeholder="Container Name"/>
-                </div>
-                <div class="form-group">
-                <select id="endpoint" class="form-control">
-                  <option value='-1'>---select an endpoint--</option>
-                  <option value='core.chinacloudapi.cn'>core.chinacloudapi.cn</option>
-                  <option value='core.windowsazure.com'>core.windowsazure.com</option>
-                </select>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-        <button type="button" class="btn btn-primary">Save changes</button>
-      </div>
-    </div>
-  </div>
+        </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->

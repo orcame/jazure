@@ -53,7 +53,7 @@
             var qidx = this.Url.indexOf("?");
             var url = '';
             if (qidx > 0) {
-                this.Url.substring(0, qidx);
+                url = this.Url.substring(0, qidx);
                 url += '/' + blobName;
                 url += this.Url.substring(qidx);
             } else {
