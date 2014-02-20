@@ -137,7 +137,10 @@
             });
             $('#btnSettings').click(function () {
                 je.showSettings();
-            })
+            });
+            $('#btnRefresh').click(function () {
+                je.getAllItems();
+            });
         },
         showSettings: function () {
             $('#modal-wrapper').load('views/settings.html', function (html) {
@@ -203,7 +206,7 @@
             });
         },
         filterList: function (catalog) {
-            var table = $('.je-list');
+            var table = $('.je-list'), label = $('#currentCatalog')
             if (catalog) {
                 table.find('tbody tr').each(function () {
                     var blobName = $(this).find('a').text();
@@ -212,9 +215,27 @@
                     } else {
                         $(this).show();
                     }
+                    var fa = 'fa-';
+                    switch (catalog) {
+                        case 'document':
+                            fa += 'th-list';
+                            break;
+                        case 'picture':
+                            fa += 'picture-o'
+                            break;
+                        case 'video':
+                            fa += 'video-camera';
+                            break;
+                        case 'other':
+                        default:
+                            fa += 'list';
+                            break;
+                    }
+                    label.html('<i class="fa ' + fa + '"></i> ' + catalog.substr(0, 1).toUpperCase() + catalog.substr(1) + 's');
                 });
             } else {
                 table.find('tbody tr').show();
+                label.html('<i class="fa fa-th"></i> All Items')
             }
         },
         openImage: function (blobName) {
