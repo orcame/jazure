@@ -65,7 +65,7 @@
                 resources.push(storage.newLineChar);
                 resources.push(qs.name.toLowerCase());
                 resources.push(':');
-                resources.push(qs.value);
+                resources.push(encodeURIComponent(qs.value));
             }
         } else {
             var len = queryStrings.length;

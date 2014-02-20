@@ -32,6 +32,7 @@
                 'PUT',
                 { restype: 'service', comp: 'properties' },
                 {
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' },
                     data: data,
                     success: success,
                     error: error
@@ -41,7 +42,7 @@
         getBlobServiceStats: function (success, error) {
             this.web.request(
                this.BlobUrl,
-               'PUT',
+               'GET',
                { restype: 'service', comp: 'stats' }
             ).send(success, error);
         }
