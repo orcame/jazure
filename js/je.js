@@ -147,12 +147,13 @@
                 var settings = je.render(html);
                 var t = $(this).html(settings);
                 t.children().modal('toggle');
+
                 t.find('#btnSettingSave').click(function () {
                     je.accountName = t.find('#settingAccountName').val();
                     je.sharedKey = t.find('#settingSharedKey').val();
                     je.containerName = t.find('#settingContainerName').val();
                     je.endpoint = t.find('#settingEndpoint').val();
-                    je.sas = t.find('#settingSAS').val();
+                    je.sas = t.find('#settingSASUrl').val();
                     je.init();
                     je.getAllItems();
                     t.children().modal('toggle');
@@ -279,7 +280,7 @@
     //je.accountName = '<--your account name-->';
     //je.sharedKey = '<--your access key-->';
     //je.containerName = '<--your container name-->';
-    je.sas = 'https://neeostorage.blob.core.chinacloudapi.cn/read-write?sv=2013-08-15&sr=c&sig=CeOGos6uMG7PfQSj2dzu3D4fOh4lkSPLS7ynsZOEQ5c%3D&st=2014-02-20T09%3A30%3A20Z&se=2014-02-21T05%3A30%3A20Z&sp=rwdl';
+    je.sas = 'https://neeostorage.blob.core.chinacloudapi.cn/read-write?sv=2013-08-15&sr=c&sig=6EBfXjw7uikZmm9u3SdNQN5vrLE4IxvGNQd9MzvRYog%3D&st=2014-02-21T08%3A12%3A58Z&se=2036-12-15T16%3A12%3A58Z&sp=rwdl';
     je.init();
     je.initEvents();
     je.getAllItems();
