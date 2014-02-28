@@ -25,7 +25,6 @@
             };
             var convertor = function (data) {
                 var blobs = data.Blobs.Blob;
-                console.log(blobs);
                 var list = [];
                 if ($.isArray(blobs)) {
                     var len = blobs.length;
