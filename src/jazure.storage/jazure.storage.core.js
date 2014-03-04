@@ -51,7 +51,7 @@
             if (absolutePath != '/') {
                 resources.push('/');
             }
-            resources.push(absolutePath);
+            resources.push(encodeURI(absolutePath));
         }
         var queryStrings = getQueryStrings(uri);
         if (!isSharedKeyLiteOrTableService) {
@@ -64,7 +64,7 @@
                 resources.push(storage.newLineChar);
                 resources.push(qs.name.toLowerCase());
                 resources.push(':');
-                resources.push(encodeURIComponent(qs.value));
+                resources.push(encodeURI(qs.value));
             }
         } else {
             var len = queryStrings.length;
