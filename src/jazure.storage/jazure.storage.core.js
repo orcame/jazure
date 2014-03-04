@@ -47,12 +47,11 @@
         var resources = ['/', accountName];
         var absolutePath = getAbsolutePath(uri);
         absolutePath = absolutePath.replace(accountName + '-secondary', accountName);
-        console.log('absolutepath', absolutePath);
         if (absolutePath) {
             if (absolutePath != '/') {
                 resources.push('/');
             }
-            resources.push(absolutePath);
+            resources.push(encodeURI(absolutePath));
         }
         var queryStrings = getQueryStrings(uri);
         if (!isSharedKeyLiteOrTableService) {
@@ -65,7 +64,7 @@
                 resources.push(storage.newLineChar);
                 resources.push(qs.name.toLowerCase());
                 resources.push(':');
-                resources.push(encodeURIComponent(qs.value));
+                resources.push(encodeURI(qs.value));
             }
         } else {
             var len = queryStrings.length;
@@ -96,7 +95,6 @@
         }
         auts.push(getCanonicalizedHeaderString(request.headers));
         auts.push(getCanonicalizedResourceString(request.url, accountName, request.isSharedKeyLiteOrTableService));
-        console.log(auts);
         var message = CryptoJS.enc.Utf8.parse(auts.join(storage.newLineChar));
         var key = CryptoJS.enc.Base64.parse(sharedKey);
         var hash = CryptoJS.HmacSHA256(message, key);
@@ -119,7 +117,6 @@
     function canonicalizeRequestHeaders(request) {
         request.headers = request.headers || {};
         var curl = cacheUrl(request);
-        console.log('cacheurl', curl);
         if (request.ifModified) {
             if ($.lastModified[curl]) {
                 request.headers["If-Modified-Since"] = $.lastModified[curl];

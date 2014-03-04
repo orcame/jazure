@@ -172,10 +172,13 @@
         readableSize: readableSize,
         readableDate: readableDate,
         getAllItems: function () {
-            this.container.listBlobs(function (blobs) {
+            this.container.children(function (data) {
+                console.log(data);
+                window.dir = data.directories[0];
                 $('<div/>').load('views/allitems.html', function (html) {
                     var table = je.render(html, {
-                        blobs: blobs,
+                        blobs: data.blobs,
+                        directories: data.directories,
                         extension: extensionName
                     });
                     je.wrapper.empty().html(table).find('a[href="javascript:"]').click(function () {
@@ -277,9 +280,6 @@
         }
     }
     window.je = je;
-    //je.accountName = '<--your account name-->';
-    //je.sharedKey = '<--your access key-->';
-    //je.containerName = '<--your container name-->';
     je.sas = 'https://neeostorage.blob.core.chinacloudapi.cn/read-write?sv=2013-08-15&sr=c&sig=6EBfXjw7uikZmm9u3SdNQN5vrLE4IxvGNQd9MzvRYog%3D&st=2014-02-21T08%3A12%3A58Z&se=2036-12-15T16%3A12%3A58Z&sp=rwdl';
     je.init();
     je.initEvents();

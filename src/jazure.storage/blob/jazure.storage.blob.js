@@ -6,6 +6,65 @@
         , container = ja.storage.container
         , web = ja.storage.web;
 
+    var blobConvertor = function (obj, blobs) {
+        if (blobs) {
+            var list = [];
+            if (!$.isArray(blobs)) {
+                blobs = [blobs];
+            }
+            var prefix = (obj instanceof container) ? '' : obj.FullName;
+            var len = blobs.length;
+            for (var idx = 0; idx < len; idx++) {
+                var item = blobs[idx];
+                var name = item.Name.substring(prefix.length);
+                var b = obj.getBlob(item.Name, item.Properties.BlobType);
+                b.Properties = item.Properties;
+                b.web = obj.web;
+                list.push(b);
+            }
+            return list;
+        }
+        return [];
+    }, directoryConvertor = function (obj, directories) {
+        if (directories) {
+            var list = [];
+            if (!$.isArray(directories)) {
+                directories = [directories];
+            }
+            var prefix = (obj instanceof container) ? '' : obj.FullName;
+            var len = directories.length;
+            var preUrl = obj.Url, postUrl = '', qidx = obj.Url.indexOf('?');
+            if (qidx > 0) {
+                postUrl = preUrl.substring(qidx);
+                preUrl = preUrl.substring(0, qidx);
+            }
+            for (var idx = 0; idx < len; idx++) {
+                var item = directories[idx];
+                var name = item.Name.substring(prefix.length);
+                var c = directory(preUrl + '/' + name + postUrl);
+                c.web = obj.web;
+                list.push(c);
+            }
+            return list;
+        }
+        return [];
+    }, splitUrl = function (url) {
+        var regex = new RegExp('(http[s]?://[^/]*)/([^/]*)/?([^?]*)(.*)', 'g');
+        var match = regex.exec(url);
+        if (!match) {
+            throw "invalid blob url.";
+        }
+        return {
+            endpoint: match[1],
+            containerName: match[2],
+            blobName: match[3],
+            sas: match[4]
+        };
+    }, joinUrl = function () {
+        return Array.prototype.slice.call(arguments).join('/');
+    }
+    window.splitUrl = splitUrl;
+
     //extend container prototype
     $.extend(container.prototype, {
         listBlobs: function (options, success, error) {
@@ -18,30 +77,34 @@
             options.restype = 'container';
             options.comp = 'list';
             var t = this;
-            var addBlob = function (list, blob) {
-                var b = t.getBlob(blob.Name, blob.Properties.BlobType);
-                b.Properties = blob.Properties;
-                list.push(b);
-            };
             var convertor = function (data) {
-                var blobs = data.Blobs.Blob;
-                console.log(blobs);
-                var list = [];
-                if ($.isArray(blobs)) {
-                    var len = blobs.length;
-                    for (var idx = 0; idx < len; idx++) {
-                        addBlob(list, blobs[idx]);
-                    }
-                } else if (blobs) {//if the container has only one blob.
-                    addBlob(list, blobs);
-                }
-                return list;
+                var result = {};
+                result.blobs = blobConvertor(t, data.Blobs.Blob);
+                result.directories = directoryConvertor(t, data.Blobs.BlobPrefix);
+                result.nextMarker = data.NextMarker;
+                return result;
             };
             this.web.request(this.Url, 'GET', options, {
                 convertor: convertor,
                 success: success,
                 error: error
             }).send();
+        },
+        children: function (options, success, error) {
+            if (typeof (options) == "function") {
+                error = success;
+                success = options;
+                options = {};
+            }
+            $.extend(options, { delimiter: '/' });
+            return this.listBlobs.call(this, options, success, error);
+        },
+        getDirectory: function (name) {
+            var p = splitUrl(this.Url);
+            url = joinUrl(p.endpoint, p.containerName, name + p.sas);
+            var d = directory(url);
+            d.web = this.web;
+            return d;
         },
         getBlob: function (blobName, blobType) {
             if (!blobType) {
@@ -50,15 +113,8 @@
             if (blobType != pageBlobType && blobType != blockBlobType) {
                 throw 'the blob type can only be ' + blockBlobType + ' or ' + pageBlobType + ', by default is ' + blockBlobType + '.';
             }
-            var qidx = this.Url.indexOf("?");
-            var url = '';
-            if (qidx > 0) {
-                url = this.Url.substring(0, qidx);
-                url += '/' + blobName;
-                url += this.Url.substring(qidx);
-            } else {
-                url = this.Url + '/' + blobName;
-            }
+            var p = splitUrl(this.Url);
+            url = joinUrl(p.endpoint, p.containerName, blobName + p.sas);
             var b = blob(url, blobType);
             b.web = this.web;
             return b;
@@ -70,6 +126,78 @@
             return this.getPageBlob(blobName, pageBlobType);
         }
     });
+
+    function getBlobNameByUrl(url) {
+        regex = new RegExp('http(s?)://[^/]*/[^/]*/([^?]*)', 'g');
+        var match = regex.exec(url);
+        if (!match) {
+            throw "invalid blob url.";
+        }
+        var name = match[2];
+        return name;
+    }
+
+    var directory = function (url) {
+        return new directory.prototype.init(url);
+    };
+
+    directory.prototype = {
+        init: function (url) {
+            var surl = splitUrl(url);
+            var fullName = surl.blobName;// getBlobNameByUrl(url);
+            var url = joinUrl(surl.endpoint, surl.containerName, surl.sas);
+            var path = fullName.replace(/^\/|\/?$/g, "");
+            var name = path.substring(path.lastIndexOf('/') + 1);
+            ja.defineReadonlyProperties(this, { Url: url, Name: name, FullName: fullName });
+            this.web = web();
+            return this;
+        }, getBlob: function (blobName, blobType) {
+            blobName = this.FullName + blobName;
+            return container.prototype.getBlob.call(this, blobName, blobType);
+        }, getBlockBlob: function (blobName) {
+            return this.getBlob(blobName, blockBlobType);
+        }, getPageBlob: function (blobName) {
+            return this.getBlob(blobName, pageBlobType);
+        }, listBlobs: function (options, success, error) {
+            var op = {};
+            if (typeof (options) == 'object') {
+                $.extend(op, options);
+            } else if (typeof (options) == 'function') {
+                error = success;
+                success = options;
+            }
+            op.prefix = this.FullName + (op.prefix || '');
+            return container.prototype.listBlobs.call(this, op, success, error);
+        }, children: function (options, success, error) {
+            var op = {};
+            if (typeof (options) == 'object') {
+                $.extend(op, options);
+            } else if (typeof (options) == 'function') {
+                error = success;
+                success = options;
+            }
+            op.delimiter = '/';
+            return this.listBlobs(op, success, error);
+        }, parent: function () {
+            if (this._parent === undefined) {
+                if (this.FullName.indexOf('/') == this.FullName.length - 1) {
+                    this._parent = null;
+                } else {
+                    var url = this.Url, post = '';
+                    if (url.indexOf('?') > 0) {
+                        post = url.substring(url.indexOf('?'))
+                        url = url.substring(0, url.length - post.length);
+                    }
+                    url = url.substring(0, url.length - this.Name.length);
+                    this._parent = directory(url);
+                    this._parent.web = this.web();
+                }
+            }
+            return this._parent;
+        }
+    }
+
+    directory.prototype.init.prototype = directory.prototype;
 
     //blobs
     var blob = function (url, type) {
@@ -92,15 +220,14 @@
     };
     blob.prototype = {
         init: function (url, type) {
-            regex = new RegExp('http(s?)://[^/]*/[^/]*/([^?]*)', 'g');
-            var match = regex.exec(url);
-            if (!match) {
-                throw "invalid blob url.";
-            }
-            var name = match[2];
+            var surl = splitUrl(url);
+            var name = surl.blobName;// getBlobNameByUrl(url);
             ja.defineReadonlyProperties(this, { Url: url, BlobType: type, Name: name });
             this.web = web();
             return this;
+        },
+        shortName: function () {
+            return this.name.substring(this.name.lastIndexOf('/') + 1);
         },
         put: function (file, success, error) {
             this.upload(file, null, null, success, error);
@@ -196,14 +323,26 @@
             //todo:get page range...
         },
         upload: function (file, before, progress, success, error) {
-            if (!progress) {
-                progress = before;
-                success = progress;
-                error = success;
+            var arglen = arguments.length;
+            if (arglen == 2 || arglen == 3) {
+                success = before;
+                error = progress;
             }
-            else if (!success) {
+            else if (arglen == 4) {
                 success = before;
                 error = success;
+                progress = before;
+            }
+            if (!(file instanceof File)) {
+                if ($.isArray(file)) {
+                    file = new Blob(file);
+                } else {
+                    if (typeof (file) == 'object') {
+                        file = new Blob([JSON.stringify(file)]);
+                    } else {
+                        file = new Blob([file]);
+                    }
+                }
             }
             uploader.enqueueBlob(this, file, before, progress, success, error);
             uploader.enqueueErrorBlocks(blob);

@@ -92,6 +92,15 @@
                             <td style="width:10%"><%je.readableDate(blobs[idx].Properties.Last_Modified)%></td>
                         </tr>
                         <%}%>
+                        <%for(var idx=0;idx < directories.length; idx++){%>
+                        <tr>
+                            <td style="width:60%">
+                                <a href="javascript:"><%directories[idx].Name%></a>
+                            </td>
+                            <td style="width:10%">[Folder]</td>
+                            <td style="width:10%"></td>
+                        </tr>
+                        <%}%>
                     </tbody>
                 </table>
                 <div id="morris-chart-area"></div>
