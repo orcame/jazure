@@ -17,7 +17,7 @@
             for (var idx = 0; idx < len; idx++) {
                 var item = blobs[idx];
                 var name = item.Name.substring(prefix.length);
-                var b = obj.getBlob(item.Name, item.Properties.BlobType);
+                var b = obj.getBlob(name, item.Properties.BlobType);
                 b.Properties = item.Properties;
                 b.web = obj.web;
                 list.push(b);
@@ -31,17 +31,11 @@
             if (!$.isArray(directories)) {
                 directories = [directories];
             }
-            var prefix = (obj instanceof container) ? '' : obj.FullName;
             var len = directories.length;
-            var preUrl = obj.Url, postUrl = '', qidx = obj.Url.indexOf('?');
-            if (qidx > 0) {
-                postUrl = preUrl.substring(qidx);
-                preUrl = preUrl.substring(0, qidx);
-            }
+            var purl = splitUrl(obj.Url);
             for (var idx = 0; idx < len; idx++) {
-                var item = directories[idx];
-                var name = item.Name.substring(prefix.length);
-                var c = directory(preUrl + '/' + name + postUrl);
+                var url = joinUrl(purl.endpoint, purl.containerName, directories[idx].Name, purl.sas);
+                var c = directory(url);
                 c.web = obj.web;
                 list.push(c);
             }
@@ -61,8 +55,24 @@
             sas: match[4]
         };
     }, joinUrl = function () {
-        return Array.prototype.slice.call(arguments).join('/');
-    }
+        var reg = new RegExp('([^:])/{2,}', 'g');
+        return Array.prototype.slice.call(arguments).join('/').replace(reg, '$1/');
+    }, readableSize = function (value) {
+        if (!value) {
+            return value;
+        }
+        var units = ["B", "KB", "MB", "GB", "TB", "PB"];
+        if (typeof (value) == 'string') {
+            value = parseInt(value);
+        }
+        for (var idx = 0; idx < units.length; idx++) {
+            if (value < 1024) {
+                return value.toFixed(2) + units[idx];
+            }
+            value = value / 1024;
+        }
+        return value;
+    };
     window.splitUrl = splitUrl;
 
     //extend container prototype
@@ -82,6 +92,7 @@
                 result.blobs = blobConvertor(t, data.Blobs.Blob);
                 result.directories = directoryConvertor(t, data.Blobs.BlobPrefix);
                 result.nextMarker = data.NextMarker;
+                result.prefix = data.Prefix;
                 return result;
             };
             this.web.request(this.Url, 'GET', options, {
@@ -144,7 +155,7 @@
     directory.prototype = {
         init: function (url) {
             var surl = splitUrl(url);
-            var fullName = surl.blobName;// getBlobNameByUrl(url);
+            var fullName = surl.blobName;
             var url = joinUrl(surl.endpoint, surl.containerName, surl.sas);
             var path = fullName.replace(/^\/|\/?$/g, "");
             var name = path.substring(path.lastIndexOf('/') + 1);
@@ -152,7 +163,7 @@
             this.web = web();
             return this;
         }, getBlob: function (blobName, blobType) {
-            blobName = this.FullName + blobName;
+            blobName = joinUrl(this.FullName, blobName);
             return container.prototype.getBlob.call(this, blobName, blobType);
         }, getBlockBlob: function (blobName) {
             return this.getBlob(blobName, blockBlobType);
@@ -166,8 +177,11 @@
                 error = success;
                 success = options;
             }
-            op.prefix = this.FullName + (op.prefix || '');
+            op.prefix = joinUrl(this.FullName, (op.prefix || ''));
             return container.prototype.listBlobs.call(this, op, success, error);
+        }, getDirectory: function (name) {
+            name = joinUrl(this.FullName, name, '/');
+            return container.prototype.getDirectory.call(this, name);
         }, children: function (options, success, error) {
             var op = {};
             if (typeof (options) == 'object') {
@@ -179,21 +193,16 @@
             op.delimiter = '/';
             return this.listBlobs(op, success, error);
         }, parent: function () {
-            if (this._parent === undefined) {
-                if (this.FullName.indexOf('/') == this.FullName.length - 1) {
-                    this._parent = null;
-                } else {
-                    var url = this.Url, post = '';
-                    if (url.indexOf('?') > 0) {
-                        post = url.substring(url.indexOf('?'))
-                        url = url.substring(0, url.length - post.length);
-                    }
-                    url = url.substring(0, url.length - this.Name.length);
-                    this._parent = directory(url);
-                    this._parent.web = this.web();
-                }
+            var fullName = this.FullName.replace(/^\/|\/?$/g, "");
+            if (fullName.indexOf('/') < 0) {
+                return null;
+            } else {
+                var surl = splitUrl(this.Url), snames = fullName.split('/'), pname = snames.slice(0, snames.length - 1).join('/');
+                var url = joinUrl(surl.endpoint, surl.containerName, pname, surl.sas);
+                var p = directory(url);
+                p.web = this.web;
+                return p;
             }
-            return this._parent;
         }
     }
 
@@ -220,20 +229,30 @@
     };
     blob.prototype = {
         init: function (url, type) {
-            var surl = splitUrl(url);
-            var name = surl.blobName;// getBlobNameByUrl(url);
-            ja.defineReadonlyProperties(this, { Url: url, BlobType: type, Name: name });
+            var surl = splitUrl(url),
+                fullName = surl.blobName,
+                shortName = fullName.substring(fullName.lastIndexOf('/') + 1),
+                extension = shortName.indexOf('.') >= 0 ? shortName.substring(shortName.lastIndexOf('.') + 1) : '';
+            ja.defineReadonlyProperties(this,
+                {
+                    Url: url,
+                    BlobType: type,
+                    Name: shortName,
+                    FullName: fullName,
+                    Extension: extension
+                });
             this.web = web();
             return this;
         },
-        shortName: function () {
-            return this.name.substring(this.name.lastIndexOf('/') + 1);
+        size: function (readable) {
+            var v = parseInt(this.Properties.Content_Length, 10);
+            return readable === false ? v : readableSize(v);
         },
         put: function (file, success, error) {
             this.upload(file, null, null, success, error);
         },
         get: function (success, error) {
-
+            this.download();
         },
         snapshot: function (metadata, success, error) {
             if (typeof (metadata) == 'function') {
