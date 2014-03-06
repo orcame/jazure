@@ -32,12 +32,6 @@
                     return _xhr;
                 },
                 beforeSend: function (xhr) {
-                    //if (options.headers) {
-                    //    for (var n in options.headers) {
-                    //        xhr.setRequestHeader(n, options.headers[n]);
-                    //    }
-                    //}
-                    console.log('lastModified', $.lastModified);
                     if (options.before) {
                         options.before(xhr);
                     }
