@@ -216,6 +216,9 @@
                     FullName: fullName,
                     Extension: extension
                 });
+            if (surl.sas) {
+                ja.defineReadonlyProperties(this, { 'sas': url });
+            }
             this.web = web();
             return this;
         },
@@ -362,7 +365,12 @@
                 frame.style.display = 'none';
                 document.body.appendChild(frame);
             }
-            frame.src = this.Url;
+            if (this.sas) {
+                frame.src = this.sas
+            } else {
+                var d = new Date(), s = new Date(d.getTime() - 5 * 60 * 1000), e = new Date(d.getTime() + 3 * 60 * 1000);
+                frame.src = this.getSasUri({ permission: 'r', startTime: s, endTime: e });
+            }
         }, 'delete': function (success, error) {
             this.web.request(this.Url, 'DELETE').send(success, error);
         }, setMetadata: function (metadata, success, error) {

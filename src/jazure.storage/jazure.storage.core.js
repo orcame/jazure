@@ -232,7 +232,7 @@
                         if (!(options[n] instanceof Date)) {
                             v = new Date(options[n]);
                         }
-                        v = toISOString(toUTCTime(v));
+                        v = toISOString(v);
                     }
                     strs.push(v);
                     op[n] = v;
