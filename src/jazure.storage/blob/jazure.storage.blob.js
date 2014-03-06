@@ -43,7 +43,7 @@
         }
         return [];
     }, splitUrl = function (url) {
-        var regex = new RegExp('(http[s]?://[^/]*)/([^/]*)/?([^?]*)(.*)', 'g');
+        var regex = new RegExp('(http[s]?://[^/]*)/([^?/]*)/?([^?]*)(.*)', 'g');
         var match = regex.exec(url);
         if (!match) {
             throw "invalid blob url.";
@@ -73,8 +73,6 @@
         }
         return value;
     };
-    window.splitUrl = splitUrl;
-
     //extend container prototype
     $.extend(container.prototype, {
         listBlobs: function (options, success, error) {
@@ -125,7 +123,7 @@
                 throw 'the blob type can only be ' + blockBlobType + ' or ' + pageBlobType + ', by default is ' + blockBlobType + '.';
             }
             var p = splitUrl(this.Url);
-            url = joinUrl(p.endpoint, p.containerName, blobName + p.sas);
+            var url = joinUrl(p.endpoint, p.containerName, blobName + p.sas);
             var b = blob(url, blobType);
             b.web = this.web;
             return b;
@@ -137,16 +135,6 @@
             return this.getPageBlob(blobName, pageBlobType);
         }
     });
-
-    function getBlobNameByUrl(url) {
-        regex = new RegExp('http(s?)://[^/]*/[^/]*/([^?]*)', 'g');
-        var match = regex.exec(url);
-        if (!match) {
-            throw "invalid blob url.";
-        }
-        var name = match[2];
-        return name;
-    }
 
     var directory = function (url) {
         return new directory.prototype.init(url);
