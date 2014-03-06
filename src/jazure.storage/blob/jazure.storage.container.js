@@ -58,6 +58,16 @@
             }
             this.web = web(sas);
             return this;
+        }, getSas: function (options) {
+            surl = ja.storage.splitUrl(this.Url);
+            var op = $.extend({}, options, {
+                resourceType: 'c',
+                resourceName: '/' + ja.storage.joinUrl(surl.accountName, surl.containerName)
+            });
+            return this.web.getSas(op);
+        }, getSasUri: function (options) {
+            var sas = this.getSas(options), surl = ja.storage.splitUrl(this.Url);
+            return ja.storage.joinUrl(surl.endpoint, surl.containerName) + sas;
         }, create: function (success, error) {
             this.web.request(this.Url, 'PUT', { restType: 'container' }).send(success, error);
         }, 'delete': function (success, error) {

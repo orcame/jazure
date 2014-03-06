@@ -6,7 +6,24 @@
         newLineChar: '\n',
         x_ms_version: '2013-08-15',
         blockSize: maxBlockSize,
-        serviceEndpoint: 'core.windows.net'
+        serviceEndpoint: 'core.windows.net',
+        splitUrl: function (url) {
+            var regex = new RegExp('(http[s]?://([^.]+)\.[^/]*)/([^?/]*)/?([^?]*)(.*)', 'g');
+            var match = regex.exec(url);
+            if (!match) {
+                throw "invalid blob url.";
+            }
+            return {
+                endpoint: match[1],
+                accountName: match[2],
+                containerName: match[3],
+                blobName: match[4],
+                sas: match[5]
+            };
+        }, joinUrl: function () {
+            var reg = new RegExp('([^:])/{2,}', 'g');
+            return Array.prototype.slice.call(arguments).join('/').replace(reg, '$1/');
+        }
     };
 
     jAzure.storage = storage;
@@ -152,6 +169,31 @@
             request.url = url;
         }
     }
+
+    function toUTCTime(time) {
+        return new Date(time.getUTCFullYear(),
+            time.getUTCMonth(),
+            time.getUTCDate(),
+            time.getUTCHours(),
+            time.getUTCMinutes(),
+            time.getUTCSeconds());
+    }
+    function pad(number) {
+        var r = String(number);
+        if (r.length === 1) {
+            r = '0' + r;
+        }
+        return r;
+    }
+    function toISOString(time) {
+        return time.getUTCFullYear()
+            + '-' + pad(time.getUTCMonth() + 1)
+            + '-' + pad(time.getUTCDate())
+            + 'T' + pad(time.getUTCHours())
+            + ':' + pad(time.getUTCMinutes())
+            + ':' + pad(time.getUTCSeconds())
+            + 'Z';
+    }
     var web = function (accountName, sharedKey) {
         return new web.prototype.init(accountName, sharedKey);
     };
@@ -168,9 +210,73 @@
                 request.ifModified = true;
                 canonicalizeRequest(request, _auth);
                 ja.ajax(request);
+            };
+            this.compute256 = function (auts) {
+                var message = CryptoJS.enc.Utf8.parse(auts.join(storage.newLineChar));
+                var key = CryptoJS.enc.Base64.parse(sharedKey);
+                var hash = CryptoJS.HmacSHA256(message, key);
+                var signature = hash.toString(CryptoJS.enc.Base64)
+
+                return signature;
             }
         }, request: function (url, verb, params, options) {
             return new request(this, url, verb, params, options);
+        }, getSas: function (options) {
+            var op = {
+                permission: '',
+                startTime: '',
+                endTime: '',
+                resourceName: '',
+                policyIdentifier: '',
+                storageVersion: storage.x_ms_version,
+                cacheControl: '',
+                contentDisposition: '',
+                contentEncoding: '',
+                contentLanguage: '',
+                contentType: ''
+            };
+            var strs = [];
+            for (var n in op) {
+                if (options[n]) {
+                    var v = options[n];
+                    if (n == 'startTime' || n == 'endTime') {
+                        if (!(options[n] instanceof Date)) {
+                            v = new Date(options[n]);
+                        }
+                        v = toISOString(toUTCTime(v));
+                    }
+                    strs.push(v);
+                    op[n] = v;
+                } else {
+                    strs.push(op[n]);
+                }
+            }
+            op.signature = this.compute256(strs);
+            op.resourceType = options.resourceType;
+            var qms = {
+                'sv': 'storageVersion',
+                'sr': 'resourceType',
+                'si': 'policyIdentifier',
+                'sk': 'accountKeyName',
+                'sig': 'signature',
+                'st': 'startTime',
+                'se': 'endTime',
+                'sp': 'permission',
+                'rscc': 'cacheControl',
+                'rsct': 'contentType',
+                'rsce': 'contentEncoding',
+                'rscl': 'contentLanguage',
+                'rscd': 'contentDisposition'
+            };
+            strs.length = 0;
+            for (var n in qms) {
+                var k = qms[n];
+                if (op[k]) {
+                    var v = op[k]
+                    strs.push(n + '=' + encodeURIComponent(op[k]));
+                }
+            }
+            return '?' + strs.join('&');
         }
     };
     web.prototype.init.prototype = web.prototype;

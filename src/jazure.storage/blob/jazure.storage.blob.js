@@ -42,22 +42,9 @@
             return list;
         }
         return [];
-    }, splitUrl = function (url) {
-        var regex = new RegExp('(http[s]?://[^/]*)/([^?/]*)/?([^?]*)(.*)', 'g');
-        var match = regex.exec(url);
-        if (!match) {
-            throw "invalid blob url.";
-        }
-        return {
-            endpoint: match[1],
-            containerName: match[2],
-            blobName: match[3],
-            sas: match[4]
-        };
-    }, joinUrl = function () {
-        var reg = new RegExp('([^:])/{2,}', 'g');
-        return Array.prototype.slice.call(arguments).join('/').replace(reg, '$1/');
-    }, readableSize = function (value) {
+    }, splitUrl = ja.storage.splitUrl,
+    joinUrl = ja.storage.joinUrl,
+    readableSize = function (value) {
         if (!value) {
             return value;
         }
@@ -231,6 +218,18 @@
                 });
             this.web = web();
             return this;
+        },
+        getSas: function (options) {
+            surl = ja.storage.splitUrl(this.Url);
+            var op = $.extend({}, options, {
+                resourceType: 'b',
+                resourceName: '/' + ja.storage.joinUrl(surl.accountName, surl.containerName, this.FullName)
+            });
+            return this.web.getSas(op);
+        },
+        getSasUri: function (options) {
+            var sas = this.getSas(options), surl = ja.storage.splitUrl(this.Url);
+            return ja.storage.joinUrl(surl.endpoint, surl.containerName, this.FullName) + sas;
         },
         size: function (readable) {
             var v = parseInt(this.Properties.Content_Length, 10);
