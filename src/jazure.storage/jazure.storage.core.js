@@ -97,7 +97,7 @@
         }
         return resources.join('');
     }
-    function getSharedKeyAuthHeader(request, accountName, sharedKey) {
+    function getSharedKeyAuthHeader(request, accountName) {
         var hs = request.isSharedKeyLiteOrTableService ?
              ['Content-MD5', 'Content-Type', 'Date'] :
              ['Content-Encoding', 'Content-Language', 'Content-Length', 'Content-MD5', 'Content-Type', 'Date', 'If-Modified-Since', 'If-Match', 'If-None-Match', 'If-Unmodified-Since', 'Range'];
@@ -112,16 +112,7 @@
         }
         auts.push(getCanonicalizedHeaderString(request.headers));
         auts.push(getCanonicalizedResourceString(request.url, accountName, request.isSharedKeyLiteOrTableService));
-        var message = CryptoJS.enc.Utf8.parse(auts.join(storage.newLineChar));
-        var key = CryptoJS.enc.Base64.parse(sharedKey);
-        var hash = CryptoJS.HmacSHA256(message, key);
-        var signature = hash.toString(CryptoJS.enc.Base64)
-        var str = accountName + ':' + signature;
-        if (request.isSharedKeyLiteOrTableService) {
-            return 'SharedKeyLite ' + str;
-        } else {
-            return 'SharedKey ' + str;
-        }
+        return auts;
     }
     var rnoContent = /^(?:GET|HEAD)$/, rquery = /\?/;
     function cacheUrl(request) {
@@ -146,12 +137,6 @@
         request.headers['x-ms-date'] = new Date().toGMTString();
         if (request.headers['Content-Type']) {
             request.contentType = request.headers['Content-Type'];
-        }
-    }
-    function canonicalizeRequest(request, auth) {
-        canonicalizeRequestHeaders(request);
-        if (auth) {
-            request.headers['Authorization'] = getSharedKeyAuthHeader(request, auth.accountName, auth.sharedKey);
         }
     }
     function preSetUrl(request) {
@@ -205,18 +190,22 @@
                 ? { accountName: accountName, sharedKey: sharedKey }
                 : null;
             this.sendRequest = function (request) {
-                request.url = request.url;
                 preSetUrl(request);
                 request.ifModified = true;
-                canonicalizeRequest(request, _auth);
+                canonicalizeRequestHeaders(request);
+                if (_auth) {
+                    var auts = getSharedKeyAuthHeader(request, _auth.accountName),
+                        signature = this.compute256(auts),
+                        authorization = (request.isSharedKeyLiteOrTableService ? 'SharedKeyLite' : 'SharedKey') + ' ' + accountName + ':' + signature;
+                    request.headers['Authorization'] = authorization;
+                }
                 ja.ajax(request);
             };
             this.compute256 = function (auts) {
-                var message = CryptoJS.enc.Utf8.parse(auts.join(storage.newLineChar));
-                var key = CryptoJS.enc.Base64.parse(sharedKey);
-                var hash = CryptoJS.HmacSHA256(message, key);
-                var signature = hash.toString(CryptoJS.enc.Base64)
-
+                var message = CryptoJS.enc.Utf8.parse(auts.join(storage.newLineChar)),
+                    key = CryptoJS.enc.Base64.parse(sharedKey),
+                    hash = CryptoJS.HmacSHA256(message, key),
+                    signature = hash.toString(CryptoJS.enc.Base64);
                 return signature;
             }
         }, request: function (url, verb, params, options) {
