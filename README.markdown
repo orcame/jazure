@@ -9,7 +9,7 @@ To use this plugin, you need:
 <!--list end-->
 
 	//notice ja is an alise of jAzure
-	var container=ja.container(containerSas);
+	var container=ja.storage.container(containerSas);
 	var blob=container.getBlob('myblob');
 	blob.upload(file,function(){
 		//before upload.
